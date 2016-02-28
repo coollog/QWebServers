@@ -3,5 +3,9 @@ Listen 1234
   DocumentRoot /Users/coollog
   ServerName localhost:1234
 <VirtualHost>
+<VirtualHost *:1234>
+  DocumentRoot /Users/coollog/Documents
+  ServerName 127.0.0.1:1234
+<VirtualHost>
 ThreadPoolSize 4
 CacheSize 131072

@@ -33,14 +33,17 @@ public class SHTTPTestClientThread implements Runnable {
     return (double)totalWaitTime / totalFilesProcessed;
   }
 
-  public SHTTPTestClientThread() {}
+  public SHTTPTestClientThread(int id) {
+    this.id = id;
+  }
 
   public void run() {
     // Time the operation.
     long startTime = System.currentTimeMillis();
 
-    while (System.currentTimeMillis() - startTime < TIME_TO_RUN) {
+    while (System.currentTimeMillis() - startTime < TIME_TO_RUN * 1000) {
       String fileName = FILES.get(filesProcessed % FILES.size());
+      System.out.println("Thread " + id + " retrieving " + fileName);
 
       try {
         // Connect to the server.
@@ -55,18 +58,21 @@ public class SHTTPTestClientThread implements Runnable {
 
         // Close the connection.
         socket.close();
+
+        // Increment the file counter.
+        filesProcessed ++;
       } catch (Exception e) {
         e.printStackTrace();
+        return;
       }
-
-      // Increment the file counter.
-      filesProcessed ++;
     }
 
-    finish();
+    finish(filesProcessed, bytesReceived, waitTime);
   }
 
-  private synchronized void finish() {
+  private synchronized static void finish(int filesProcessed,
+                                          int bytesReceived,
+                                          int waitTime) {
     totalFilesProcessed += filesProcessed;
     totalBytesReceived += bytesReceived;
     totalWaitTime += waitTime;
@@ -97,6 +103,8 @@ public class SHTTPTestClientThread implements Runnable {
 
     return totalBytes;
   }
+
+  private final int id;
 
   // Counter for which file to request (also equals total # files received).
   private int filesProcessed = 0;
