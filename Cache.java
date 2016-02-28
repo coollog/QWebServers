@@ -3,11 +3,16 @@ import java.util.concurrent.*;
 
 public class Cache {
   public static class DateContentPair {
-    public final Date modifiedDate;
+    public final Date lastRetrievedDate;
     public final byte[] content;
-    public DateContentPair(Date modifiedDate, byte[] content) {
-      this.modifiedDate = modifiedDate;
+
+    public DateContentPair(byte[] content) {
+      lastRetrievedDate = Utilities.now();
       this.content = content;
+    }
+
+    public String toString() {
+      return "<" + lastRetrievedDate + ", " + content.length + ">";
     }
   }
 
@@ -22,10 +27,10 @@ public class Cache {
   public DateContentPair get(String path) {
     return map.get(path);
   }
-  public synchronized void put(String path, Date modifiedDate, byte[] content) {
+  public synchronized void put(String path, byte[] content) {
     if (used + content.length > size) return;
 
-    DateContentPair inserted = new DateContentPair(modifiedDate, content);
+    DateContentPair inserted = new DateContentPair(content);
     DateContentPair removed = map.put(path, inserted);
 
     if (removed != null) used -= removed.content.length;

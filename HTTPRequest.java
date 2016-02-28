@@ -4,6 +4,7 @@ import java.util.*;
 
 public class HTTPRequest {
   public HTTPRequest(BufferedReader request) throws Exception {
+    System.out.println("Request header:");
     while (parseHeader(request.readLine()));
 
     checkHeaders();
@@ -20,19 +21,32 @@ public class HTTPRequest {
   public boolean isLoad() { return isLoad; }
 
   private boolean parseHeader(String line) throws Exception {
+    System.out.println(line);
     if (line == null || line.length() == 0) return false;
 
     if (line.startsWith("GET") || line.startsWith("POST")) {
       String[] tokens = line.split(" ");
+
       method = tokens[0];
+
       if (tokens[1].equals("/load")) {
         isLoad = true;
         return true;
       }
-      URL url = new URL(tokens[1]);
-      urlPath = url.getPath().substring(0, url.getPath().indexOf("?"));
-      if (line.startsWith("GET")) {
-        urlQuery = Utilities.splitURLQuery(url.getQuery());
+
+      try {
+        URL url = new URL(tokens[1]);
+        urlPath = url.getPath();
+      } catch (MalformedURLException e) {
+        urlPath = tokens[1];
+      }
+      int questionIndex = urlPath.indexOf("?");
+      if (questionIndex >= 0) {
+        urlPath = urlPath.substring(0, questionIndex);
+        if (line.startsWith("GET")) {
+          urlQuery = Utilities.splitURLQuery(
+            urlPath.substring(questionIndex + 1, urlPath.length()));
+        }
       }
     } else if (line.startsWith("Host: ")) {
       host = getHeaderLineValue(line);

@@ -20,6 +20,7 @@ public class HTTPResponse {
         appendLine("Last-Modified: " + Utilities.getHTTPDate(lastModified));
       }
     }
+    appendLine();
 
     this.content = content;
   }
@@ -31,10 +32,13 @@ public class HTTPResponse {
     return content;
   }
 
+  private void appendLine() {
+    responseHeader.append("\r\n");
+  }
   private void appendLine(String line) {
     responseHeader.append(line).append("\r\n");
   }
 
   private byte[] content;
-  private StringBuffer responseHeader;
+  private StringBuffer responseHeader = new StringBuffer(0x1000);
 }

@@ -8,7 +8,7 @@ import java.util.*;
 
 public class HTTPSequentialServer extends HTTPServer {
   public static void main(String[] args) throws Exception {
-    init(args);
+    if (!init(args)) return;
 
     ServerSocket server = new ServerSocket(config.getPort());
 
