@@ -8,17 +8,24 @@ public class HTTPResponse {
                       String serverName,
                       Date lastModified,
                       byte[] content) {
+    if (content == null) content = new byte[0];
+
     appendLine("HTTP/1.0 " + statusCode + " " + statusMessage);
     appendLine("Date: " + Utilities.getHTTPDate());
     appendLine("Server: " + serverName);
-    appendLine("Content-Type: text/html");
-    appendLine("Content-Length: " + content.length);
+    if (statusCode == 200) {
+      appendLine("Content-Type: text/html");
+      appendLine("Content-Length: " + content.length);
+      if (lastModified != null) {
+        appendLine("Last-Modified: " + Utilities.getHTTPDate(lastModified));
+      }
+    }
 
     this.content = content;
   }
 
-  public byte[] getHeaderBytes() {
-    return responseHeader.toString().getBytes();
+  public String getHeader() {
+    return responseHeader.toString();
   }
   public byte[] getContent() {
     return content;

@@ -12,11 +12,12 @@ public class HTTPRequest {
   }
 
   public String getMethod() { return method; }
-  public String getUrl() { return url; }
+  public String getUrlPath() { return urlPath; }
+  public HashMap<String, String> getUrlQuery() { return urlQuery; }
   public String getHost() { return host; }
   public Date getIfModifiedSince() { return ifModifiedSince; }
   public String getUserAgent() { return userAgent; }
-  public String getBody() { return body.toString(); }
+  public boolean isLoad() { return isLoad; }
 
   private boolean parseHeader(String line) throws Exception {
     if (line == null || line.length() == 0) return false;
@@ -24,11 +25,21 @@ public class HTTPRequest {
     if (line.startsWith("GET") || line.startsWith("POST")) {
       String[] tokens = line.split(" ");
       method = tokens[0];
-      url = tokens[1];
+      if (tokens[1].equals("/load")) {
+        isLoad = true;
+        return true;
+      }
+      URL url = new URL(tokens[1]);
+      urlPath = url.getPath().substring(0, url.getPath().indexOf("?"));
+      if (line.startsWith("GET")) {
+        urlQuery = Utilities.splitURLQuery(url.getQuery());
+      }
     } else if (line.startsWith("Host: ")) {
       host = getHeaderLineValue(line);
     } else if (line.startsWith("If-Modified-Since: ")) {
-      ifModifiedSince = Utilities.parseHTTPDate(getHeaderLineValue(line));
+      try {
+        ifModifiedSince = Utilities.parseHTTPDate(getHeaderLineValue(line));
+      } catch (Exception e) {}
     } else if (line.startsWith("User-Agent: ")) {
       userAgent = getHeaderLineValue(line);
     }
@@ -39,10 +50,14 @@ public class HTTPRequest {
   private void parseBody(BufferedReader request) throws Exception {
     if (method != "POST") return;
 
+    StringBuffer body = new StringBuffer(0x1000);
+
     String line;
     while ((line = request.readLine()) != null) {
       body.append(line).append("\r\n");
     }
+
+    urlQuery = Utilities.splitURLQuery(body.toString());
   }
 
   private String getHeaderLineValue(String line) {
@@ -50,17 +65,17 @@ public class HTTPRequest {
   }
 
   private void checkHeaders() throws Exception {
-    if (method == null || url == null || host == null) {
+    if (method == null || urlPath == null || host == null) {
       throw new Exception("Invalid message received.");
     }
   }
 
   // Headers.
   private String method;
-  private String url;
+  private String urlPath;
+  private HashMap<String, String> urlQuery;
   private String host;
   private Date ifModifiedSince;
   private String userAgent;
-
-  private StringBuffer body;
+  private boolean isLoad;
 }

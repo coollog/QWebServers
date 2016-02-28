@@ -1,3 +1,11 @@
+// SHTTPTestClient.java
+// usage: java SHTTPTestClient -server <server>
+//                             -servname <server name>
+//                             -port <server port>
+//                             -parallel <# of threads>
+//                             -files <file name>
+//                             -T <time of test in seconds>
+
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
