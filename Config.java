@@ -7,7 +7,7 @@ public class Config {
   getConfigFileNameFromArgs(String[] args) {
     // Extract the name of the program.
     String programName =
-      Thread.currentThread().getStackTrace()[1].getClassName();
+      Thread.currentThread().getStackTrace()[2].getClassName();
 
     // Check args are correct.
     if (args.length != 2 || !args[0].equals("-config")) {
@@ -21,10 +21,11 @@ public class Config {
 
   public Config(String fileName) throws Exception {
     // Open the config file.
-    BufferedReader reader = new BufferedReader(new FileReader(File(fileName)));
+    BufferedReader reader =
+      new BufferedReader(new FileReader(new File(fileName)));
 
     // Process each line.
-    while (parseLine(reader));
+    while (parseLine(reader.readLine()));
 
     reader.close();
   }
@@ -36,12 +37,11 @@ public class Config {
     return virtualHosts.get(serverName);
   }
 
-  private boolean parseLine(BufferedReader reader) {
-    String line = reader.readLine();
-
+  private boolean parseLine(String line) throws Exception {
     if (line == null) return false;
 
-    String[] tokens = line.split(" ");
+    // Process out tokens from line.
+    String[] tokens = Utilities.tokenize(line);
 
     if (inVirtualHost) {
       // Process <VirtualHost> blocks.
