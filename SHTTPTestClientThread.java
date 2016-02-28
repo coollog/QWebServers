@@ -5,6 +5,7 @@ import java.util.*;
 
 public class SHTTPTestClientThread implements Runnable {
   private static InetAddress SERVER_ADDRESS;
+  private static String SERVER_NAME;
   private static int SERVER_PORT;
   private static List<String> FILES;
   private static int TIME_TO_RUN;
@@ -14,10 +15,12 @@ public class SHTTPTestClientThread implements Runnable {
   private static int totalWaitTime = 0;
 
   public static void setup(InetAddress serverIPAddress,
+                           String serverName,
                            int argPort,
                            List<String> filesList,
                            int argT) {
     SERVER_ADDRESS = serverIPAddress;
+    SERVER_NAME = serverName;
     SERVER_PORT = argPort;
     FILES = filesList;
     TIME_TO_RUN = argT;
@@ -51,7 +54,7 @@ public class SHTTPTestClientThread implements Runnable {
 
         // Send request.
         String request = "GET " + fileName + " HTTP/1.0\r\n" +
-                         "Host: " + SERVER_ADDRESS + "\r\n\r\n";
+                         "Host: " + SERVER_NAME + "\r\n\r\n";
         long sendTime = System.currentTimeMillis();
         send(socket, request);
         bytesReceived += receive(socket, sendTime);
@@ -97,6 +100,7 @@ public class SHTTPTestClientThread implements Runnable {
     while ((numBytes = inStream.read(buffer)) != -1) {
       if (!received) {
         waitTime += System.currentTimeMillis() - sendTime;
+        received = true;
       }
       totalBytes += numBytes;
     }

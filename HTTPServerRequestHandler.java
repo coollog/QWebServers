@@ -92,7 +92,7 @@ public class HTTPServerRequestHandler implements Runnable {
 
     // If is directory, look for index.html/index_m.html.
     if (url.endsWith("/") || file.isDirectory()) {
-      if (userAgent.contains("iPhone")) {
+      if (userAgent != null && userAgent.contains("iPhone")) {
         file = new File(rootUrl + "/index_m.html");
         if (file.isFile()) return file;
       }

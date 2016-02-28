@@ -41,7 +41,7 @@ public class SHTTPTestClient {
 
     // Wait for the threads to finish.
     for (int i = 0; i < argParallel; i ++) {
-      threads[i].join(argT * 1000);
+      threads[i].join();
     }
 
     // Process statistics from threads.
@@ -90,7 +90,8 @@ public class SHTTPTestClient {
     serverIPAddress = InetAddress.getByName(argServer);
 
     // Setup the thread class.
-    SHTTPTestClientThread.setup(serverIPAddress, argPort, filesList, argT);
+    SHTTPTestClientThread.setup(
+      serverIPAddress, argServerName, argPort, filesList, argT);
 
     return true;
   }
