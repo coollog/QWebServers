@@ -3,6 +3,8 @@ import java.nio.*;
 import java.util.*;
 
 public class Config {
+  public static boolean VERBOSE = false;
+
   public static String
   getConfigFileNameFromArgs(String[] args) {
     // Extract the name of the program.
@@ -77,6 +79,9 @@ public class Config {
         break;
       case "CacheSize":
         cacheSize = Integer.parseInt(tokens[1]);
+        break;
+      case "VERBOSE":
+        VERBOSE = true;
         break;
       default:
         throw new Exception("Invalid config line: " + line);

@@ -14,12 +14,9 @@ public class HTTPMTServer extends HTTPServer {
 
     while (true) {
       Socket conn = server.accept();
-      System.out.println("receive request from " + conn);
 
-      HTTPServerRequestHandler handler =
-        new HTTPServerRequestHandler(config, conn, cache);
-      Thread handlerThread = new Thread(handler);
-      handlerThread.start();
+      HTTPServerThread serverThread = new HTTPServerThread(config, conn, cache);
+      serverThread.start();
     }
   }
 }

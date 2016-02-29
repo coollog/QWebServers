@@ -2,19 +2,13 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
-public class HTTPServerRequestHandler implements Runnable {
+public class HTTPServerRequestHandler {
   public HTTPServerRequestHandler(Config config, Socket conn, Cache cache) {
     this.config = config;
     this.conn = conn;
     this.cache = cache;
   }
-  public void run() {
-    try {
-      handle();
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-  }
+
   public void handle() throws Exception {
     // Define send/receive buffers.
     BufferedReader receiveBuffer =
@@ -44,7 +38,8 @@ public class HTTPServerRequestHandler implements Runnable {
     sendBuffer.writeBytes(response.getHeader());
     sendBuffer.writeBytes(sendContent);
 
-    System.out.println("Response header: \n" + response.getHeader());
+    if (Config.VERBOSE)
+      System.out.println("Response header: \n" + response.getHeader());
 
     // Close the connection.
     conn.close();
@@ -71,7 +66,8 @@ public class HTTPServerRequestHandler implements Runnable {
     if (root == null) { setStatus(404); return; }
 
     File file = getFile(root, urlPath, userAgent);
-    System.out.println("READING FILE " + root + "," + urlPath + "," + userAgent);
+    if (Config.VERBOSE)
+      System.out.println("READING FILE " + root + "," + urlPath + "," + userAgent);
 
     if (file == null) { setStatus(404); return; }
 
@@ -146,12 +142,12 @@ public class HTTPServerRequestHandler implements Runnable {
 
     // Check cache.
     String path = file.getCanonicalPath();
-    System.out.println("CHECKING CACHE");
+    if (Config.VERBOSE) System.out.println("CHECKING CACHE");
     if (cache.hasKey(path)) {
       Cache.DateContentPair entry = cache.get(path);
-      System.out.println(entry.toString());
+      if (Config.VERBOSE) System.out.println(entry.toString());
       if (lastModified.before(entry.lastRetrievedDate)) {
-        System.out.println("CACHE HIT");
+        if (Config.VERBOSE) System.out.println("CACHE HIT");
         content = entry.content;
         return;
       }

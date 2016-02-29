@@ -12,13 +12,7 @@ public class HTTPSequentialServer extends HTTPServer {
 
     ServerSocket server = new ServerSocket(config.getPort());
 
-    while (true) {
-      Socket conn = server.accept();
-      System.out.println("receive request from " + conn);
-
-      HTTPServerRequestHandler handler =
-        new HTTPServerRequestHandler(config, conn, cache);
-      handler.handle();
-    }
+    HTTPServerThread serverThread = new HTTPServerThread(config, server, cache);
+    serverThread.run();
   }
 }

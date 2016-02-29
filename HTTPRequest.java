@@ -4,7 +4,7 @@ import java.util.*;
 
 public class HTTPRequest {
   public HTTPRequest(BufferedReader request) throws Exception {
-    System.out.println("Request header:");
+    if (Config.VERBOSE) System.out.println("Request header:");
     while (parseHeader(request.readLine()));
 
     checkHeaders();
@@ -21,7 +21,7 @@ public class HTTPRequest {
   public boolean isLoad() { return isLoad; }
 
   private boolean parseHeader(String line) throws Exception {
-    System.out.println(line);
+    if (Config.VERBOSE) System.out.println(line);
     if (line == null || line.length() == 0) return false;
 
     if (line.startsWith("GET") || line.startsWith("POST")) {
@@ -34,19 +34,20 @@ public class HTTPRequest {
         return true;
       }
 
+      int questionIndex = tokens[1].indexOf("?");
       try {
         URL url = new URL(tokens[1]);
         urlPath = url.getPath();
       } catch (MalformedURLException e) {
-        urlPath = tokens[1];
-      }
-      int questionIndex = urlPath.indexOf("?");
-      if (questionIndex >= 0) {
-        urlPath = urlPath.substring(0, questionIndex);
-        if (line.startsWith("GET")) {
-          urlQuery = Utilities.splitURLQuery(
-            urlPath.substring(questionIndex + 1, urlPath.length()));
+        if (questionIndex >= 0) {
+          urlPath = tokens[1].substring(0, questionIndex);
+        } else {
+          urlPath = tokens[1];
         }
+      }
+      if (questionIndex >= 0 && line.startsWith("GET")) {
+        urlQuery = Utilities.splitURLQuery(
+          tokens[1].substring(questionIndex + 1, tokens[1].length()));
       }
     } else if (line.startsWith("Host: ")) {
       host = getHeaderLineValue(line);
