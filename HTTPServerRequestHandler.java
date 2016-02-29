@@ -57,8 +57,9 @@ public class HTTPServerRequestHandler {
 
   private void getContent(HTTPRequest request) throws Exception {
     String urlPath = request.getUrlPath();
-    HashMap<String, String> urlQuery = request.getUrlQuery();
+    String urlQuery = request.getUrlQuery();
     String serverName = request.getHost();
+    String method = request.getMethod();
     String userAgent = request.getUserAgent();
     Date ifModifiedSince = request.getIfModifiedSince();
 
@@ -72,7 +73,7 @@ public class HTTPServerRequestHandler {
     if (file == null) { setStatus(404); return; }
 
     if (file.canExecute()) {
-      executeFile(file, urlQuery);
+      executeFile(file, urlQuery, serverName, method);
     } else {
       readFile(file, ifModifiedSince);
     }
@@ -101,14 +102,21 @@ public class HTTPServerRequestHandler {
 
   // Helper method for getContent().
   private void executeFile(File file,
-                           HashMap<String, String> urlQuery) throws Exception {
+                           String urlQuery,
+                           String serverName,
+                           String method) throws Exception {
     ProcessBuilder pb = new ProcessBuilder(file.getAbsolutePath());
 
     // Set up process.
-    if (urlQuery != null) {
-      Map<String, String> env = pb.environment();
-      env.putAll(urlQuery);
-    }
+    Map<String, String> env = pb.environment();
+    env.put("QUERY_STRING", urlQuery);
+    env.put("REMOTE_ADDR", conn.getInetAddress().getHostAddress());
+    env.put("REMOTE_HOST", conn.getInetAddress().getHostName());
+    env.put("REQUEST_METHOD", method);
+    env.put("SERVER_NAME", serverName);
+    env.put("SERVER_PORT", Integer.toString(config.getPort()));
+    env.put("SERVER_PROTOCOL", "HTTP/1.0");
+    env.put("SERVER_SOFTWARE", "QWebServer/0.1");
     pb.directory(new File(file.getParent()));
 
     // Run process.

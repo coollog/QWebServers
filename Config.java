@@ -83,6 +83,8 @@ public class Config {
       case "VERBOSE":
         VERBOSE = true;
         break;
+      case "LoadMonitor":
+        break;
       default:
         throw new Exception("Invalid config line: " + line);
       }

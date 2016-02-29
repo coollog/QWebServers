@@ -14,7 +14,7 @@ public class HTTPRequest {
 
   public String getMethod() { return method; }
   public String getUrlPath() { return urlPath; }
-  public HashMap<String, String> getUrlQuery() { return urlQuery; }
+  public String getUrlQuery() { return urlQuery; }
   public String getHost() { return host; }
   public Date getIfModifiedSince() { return ifModifiedSince; }
   public String getUserAgent() { return userAgent; }
@@ -35,19 +35,13 @@ public class HTTPRequest {
       }
 
       int questionIndex = tokens[1].indexOf("?");
-      try {
-        URL url = new URL(tokens[1]);
-        urlPath = url.getPath();
-      } catch (MalformedURLException e) {
-        if (questionIndex >= 0) {
-          urlPath = tokens[1].substring(0, questionIndex);
-        } else {
-          urlPath = tokens[1];
+      if (questionIndex >= 0) {
+        urlPath = tokens[1].substring(0, questionIndex);
+        if (line.startsWith("GET")) {
+          urlQuery = tokens[1].substring(questionIndex + 1, tokens[1].length());
         }
-      }
-      if (questionIndex >= 0 && line.startsWith("GET")) {
-        urlQuery = Utilities.splitURLQuery(
-          tokens[1].substring(questionIndex + 1, tokens[1].length()));
+      } else {
+        urlPath = tokens[1];
       }
     } else if (line.startsWith("Host: ")) {
       host = getHeaderLineValue(line);
@@ -72,7 +66,7 @@ public class HTTPRequest {
       body.append(line).append("\r\n");
     }
 
-    urlQuery = Utilities.splitURLQuery(body.toString());
+    urlQuery = body.toString();
   }
 
   private String getHeaderLineValue(String line) {
@@ -88,7 +82,7 @@ public class HTTPRequest {
   // Headers.
   private String method;
   private String urlPath;
-  private HashMap<String, String> urlQuery;
+  private String urlQuery = "";
   private String host;
   private Date ifModifiedSince;
   private String userAgent;

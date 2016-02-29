@@ -9,3 +9,4 @@ Listen 1234
 <VirtualHost>
 ThreadPoolSize 10
 CacheSize 131072
+LoadMonitor LoadMonitor
