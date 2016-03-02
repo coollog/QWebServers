@@ -13,13 +13,13 @@ public class HTTPServer {
   protected static void runThreads(ServerSocket server) {
     runThreadsCommon(server, null, false);
   }
-  protected static void runThreads(ConcurrentLinkedQueue<Socket> queue,
+  protected static void runThreads(LinkedBlockingQueue<Socket> queue,
                                    boolean sleep) {
     runThreadsCommon(null, queue, sleep);
   }
 
   private static void runThreadsCommon(ServerSocket server,
-                                       ConcurrentLinkedQueue<Socket> queue,
+                                       LinkedBlockingQueue<Socket> queue,
                                        boolean sleep) {
     int threadCount = config.getThreads();
     HTTPServerThread[] threads = new HTTPServerThread[threadCount];

@@ -4,6 +4,8 @@ import java.net.*;
 import java.util.*;
 
 public class SHTTPTestClientThread implements Runnable {
+  private static final boolean VERBOSE = false;
+
   private static InetAddress SERVER_ADDRESS;
   private static String SERVER_NAME;
   private static int SERVER_PORT;
@@ -46,7 +48,8 @@ public class SHTTPTestClientThread implements Runnable {
 
     while (System.currentTimeMillis() - startTime < TIME_TO_RUN * 1000) {
       String fileName = FILES.get(filesProcessed % FILES.size());
-      System.out.println("Thread " + id + " retrieving " + fileName);
+      if (VERBOSE)
+        System.out.println("Thread " + id + " retrieving " + fileName);
 
       try {
         // Connect to the server.

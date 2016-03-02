@@ -164,9 +164,10 @@ public class HTTPServerRequestHandler {
     // Read in file.
     int contentLength = (int)file.length();
     FileInputStream fileStream  = new FileInputStream(file);
+    BufferedInputStream stream = new BufferedInputStream(fileStream);
 
     content = new byte[contentLength];
-    fileStream.read(content);
+    stream.read(content);
 
     cache.put(path, content);
   }

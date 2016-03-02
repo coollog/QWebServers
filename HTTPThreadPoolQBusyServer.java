@@ -15,7 +15,7 @@ public class HTTPThreadPoolQBusyServer extends HTTPServer {
     ServerSocket server = new ServerSocket(config.getPort());
 
     // Create the queue.
-    ConcurrentLinkedQueue<Socket> queue = new ConcurrentLinkedQueue<Socket>();
+    LinkedBlockingQueue<Socket> queue = new LinkedBlockingQueue<Socket>();
 
     // Run threads.
     runThreads(queue, false);
@@ -23,9 +23,7 @@ public class HTTPThreadPoolQBusyServer extends HTTPServer {
     while (true) {
       Socket conn = server.accept();
 
-      synchronized (queue) {
-        queue.add(conn);
-      }
+      queue.add(conn);
     }
   }
 }

@@ -20,7 +20,7 @@ public class HTTPServerThread extends Thread {
     type = Type.CONN;
   }
   public HTTPServerThread(Config config,
-                          ConcurrentLinkedQueue<Socket> queue,
+                          LinkedBlockingQueue<Socket> queue,
                           Cache cache,
                           boolean sleep) {
     this.queue = queue;
@@ -51,11 +51,7 @@ public class HTTPServerThread extends Thread {
       while (true) {
         conn = null;
         while (conn == null) {
-          synchronized (queue) {
-            if (!queue.isEmpty()) {
-              conn = queue.poll();
-            }
-          }
+          conn = queue.poll();
         }
 
         handleConn(conn);
@@ -63,6 +59,7 @@ public class HTTPServerThread extends Thread {
     case QUEUE_SLEEP:
       while (true) {
         conn = null;
+
         synchronized (queue) {
           while (queue.isEmpty()) {
             try {
@@ -102,7 +99,7 @@ public class HTTPServerThread extends Thread {
 
   private ServerSocket server;
   private Socket conn;
-  private ConcurrentLinkedQueue<Socket> queue;
+  private LinkedBlockingQueue<Socket> queue;
 
   private Config config;
   private Cache cache;
