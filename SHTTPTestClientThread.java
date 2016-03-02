@@ -66,7 +66,6 @@ public class SHTTPTestClientThread implements Runnable {
         filesProcessed ++;
       } catch (Exception e) {
         e.printStackTrace();
-        return;
       }
     }
 

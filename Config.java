@@ -84,6 +84,7 @@ public class Config {
         VERBOSE = true;
         break;
       case "LoadMonitor":
+        loadMonitor = Class.forName(tokens[1]);
         break;
       default:
         throw new Exception("Invalid config line: " + line);
@@ -98,6 +99,7 @@ public class Config {
   private HashMap<String, String> virtualHosts = new HashMap<String, String>();
   private int numThreads;
   private int cacheSize; // in KB
+  private Class loadMonitor;
 
   // Variables to aid in processing VirtualHosts.
   private boolean inVirtualHost = false;

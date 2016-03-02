@@ -7,6 +7,6 @@ Listen 1234
   DocumentRoot /Users/coollog/Documents
   ServerName 127.0.0.1:1234
 <VirtualHost>
-ThreadPoolSize 10
+ThreadPoolSize 20
 CacheSize 131072
 LoadMonitor LoadMonitor
