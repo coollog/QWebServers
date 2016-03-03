@@ -3,13 +3,17 @@ import java.net.*;
 import java.util.*;
 
 public class HTTPRequest {
-  public HTTPRequest(BufferedReader request) throws Exception {
+  public HTTPRequest(BufferedReader request) throws IOException {
     if (Config.VERBOSE) System.out.println("Request header:");
     while (parseHeader(request.readLine()));
 
     checkHeaders();
 
     parseBody(request);
+  }
+
+  public HTTPRequest(String request) throws IOException {
+    this(new BufferedReader(new StringReader(request)));
   }
 
   public String getMethod() { return method; }
@@ -20,7 +24,7 @@ public class HTTPRequest {
   public String getUserAgent() { return userAgent; }
   public boolean isLoad() { return isLoad; }
 
-  private boolean parseHeader(String line) throws Exception {
+  private boolean parseHeader(String line) throws IOException {
     if (Config.VERBOSE) System.out.println(line);
     if (line == null || line.length() == 0) return false;
 
@@ -56,10 +60,10 @@ public class HTTPRequest {
     return true;
   }
 
-  private void parseBody(BufferedReader request) throws Exception {
+  private void parseBody(BufferedReader request) throws IOException {
     if (method != "POST") return;
 
-    StringBuffer body = new StringBuffer(0x1000);
+    StringBuilder body = new StringBuilder(0x1000);
 
     String line;
     while ((line = request.readLine()) != null) {
@@ -73,9 +77,9 @@ public class HTTPRequest {
     return line.substring(line.indexOf(":") + 2);
   }
 
-  private void checkHeaders() throws Exception {
+  private void checkHeaders() throws IOException {
     if (method == null || urlPath == null || host == null) {
-      throw new Exception("Invalid message received.");
+      throw new IOException("Invalid message received.");
     }
   }
 

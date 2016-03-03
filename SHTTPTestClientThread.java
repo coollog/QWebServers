@@ -4,7 +4,7 @@ import java.net.*;
 import java.util.*;
 
 public class SHTTPTestClientThread implements Runnable {
-  private static final boolean VERBOSE = false;
+  private static final boolean VERBOSE = true;
 
   private static InetAddress SERVER_ADDRESS;
   private static String SERVER_NAME;
@@ -99,9 +99,19 @@ public class SHTTPTestClientThread implements Runnable {
     int totalBytes = 0; // All bytes received.
     int numBytes = 0; // Current number of bytes read.
     byte[] buffer = new byte[0x1000];
-    while ((numBytes = inStream.read(buffer)) != -1) {
+    while (true) {
+      try {
+        numBytes = inStream.read(buffer);
+      } catch (SocketException e) {
+        break;
+      }
+      if (numBytes == -1) break;
+      if (numBytes == 0) continue;
+
       if (!received) {
-        waitTime += System.currentTimeMillis() - sendTime;
+        long curWaitTime = System.currentTimeMillis() - sendTime;
+        waitTime += curWaitTime;
+        if (VERBOSE) System.out.println("\tReceived in " + curWaitTime + "ms");
         received = true;
       }
       totalBytes += numBytes;

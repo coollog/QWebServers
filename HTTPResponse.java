@@ -40,5 +40,5 @@ public class HTTPResponse {
   }
 
   private byte[] content;
-  private StringBuffer responseHeader = new StringBuffer(0x1000);
+  private StringBuilder responseHeader = new StringBuilder(0x1000);
 }

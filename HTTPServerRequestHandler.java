@@ -19,19 +19,8 @@ public class HTTPServerRequestHandler {
     // Process the request.
     HTTPRequest request = new HTTPRequest(receiveBuffer);
 
-    setStatus(200);
-
-    // Handle special /load request.
-    if (request.isLoad()) {
-      setStatus(503);
-    } else {
-      // Do the request.
-      getContent(request);
-    }
-
     // Construct the response.
-    HTTPResponse response = new HTTPResponse(
-      statusCode, statusMessage, request.getHost(), lastModified, content);
+    HTTPResponse response = getResponse(request);
 
     // Send the response.
     String sendContent = new String(response.getContent(), "ASCII");
@@ -45,6 +34,25 @@ public class HTTPServerRequestHandler {
     conn.close();
   }
 
+  public HTTPResponse getResponse(HTTPRequest request) throws IOException {
+    handleRequest(request);
+
+    return new HTTPResponse(
+      statusCode, statusMessage, request.getHost(), lastModified, content);
+  }
+
+  private void handleRequest(HTTPRequest request) throws IOException {
+    setStatus(200);
+
+    // Handle special /load request.
+    if (request.isLoad()) {
+      setStatus(503);
+    } else {
+      // Do the request.
+      getContent(request);
+    }
+  }
+
   private void setStatus(int code) {
     statusCode = code;
     switch (code) {
@@ -55,7 +63,7 @@ public class HTTPServerRequestHandler {
     }
   }
 
-  private void getContent(HTTPRequest request) throws Exception {
+  private void getContent(HTTPRequest request) throws IOException {
     String urlPath = request.getUrlPath();
     String urlQuery = request.getUrlQuery();
     String serverName = request.getHost();
@@ -104,7 +112,7 @@ public class HTTPServerRequestHandler {
   private void executeFile(File file,
                            String urlQuery,
                            String serverName,
-                           String method) throws Exception {
+                           String method) throws IOException {
     ProcessBuilder pb = new ProcessBuilder(file.getAbsolutePath());
 
     // Set up process.
@@ -121,7 +129,12 @@ public class HTTPServerRequestHandler {
 
     // Run process.
     Process process = pb.start();
-    process.waitFor();
+    try {
+      process.waitFor();
+    } catch (InterruptedException e) {
+      executeFile(file, urlQuery, serverName, method);
+      return;
+    }
 
     // Capture output.
     InputStream stdout = process.getInputStream();
@@ -139,7 +152,7 @@ public class HTTPServerRequestHandler {
   }
 
   // Helper method for getContent().
-  private void readFile(File file, Date ifModifiedSince) throws Exception {
+  private void readFile(File file, Date ifModifiedSince) throws IOException {
     lastModified = new Date(file.lastModified());
 
     // Check if modified since ifModifiedSince.
