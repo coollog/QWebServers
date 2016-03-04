@@ -10,3 +10,4 @@ Listen 1234
 ThreadPoolSize 1
 CacheSize 131072
 LoadMonitor LoadMonitor
+IncompleteTimeout 3

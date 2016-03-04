@@ -80,6 +80,10 @@ public class HTTPAsyncSelectServer extends HTTPServer implements Runnable {
 
     openServerSocketChannel();
 
+    // Setup connection timeout.
+    HTTPAsyncSelectServer.connectionTimer =
+      new HTTPAsyncConnectionTimer(config.getIncompleteTimeout());
+
     for (int i = 0; i < config.getThreads(); i ++) {
       Thread newThread = new Thread(new HTTPAsyncSelectServer());
       newThread.setPriority(Thread.MAX_PRIORITY);
@@ -161,6 +165,9 @@ public class HTTPAsyncSelectServer extends HTTPServer implements Runnable {
     // Register the new connection with interests.
     SelectionKey clientKey = client.register(selector, SelectionKey.OP_READ);
     clientKey.attach(new ClientAttachment(client));
+
+    // Register key with timeout thread.
+    connectionTimer.timeKey(clientKey);
   }
 
   private void handleRead(SelectionKey key) throws IOException {
@@ -196,7 +203,7 @@ public class HTTPAsyncSelectServer extends HTTPServer implements Runnable {
     DEBUG("\tWrote data to " + key.channel());
   }
 
-  private void finish(SelectionKey key) {
+  private static void finish(SelectionKey key) {
     try {
       key.channel().close();
     } catch (IOException e) {
@@ -204,13 +211,14 @@ public class HTTPAsyncSelectServer extends HTTPServer implements Runnable {
     }
     key.cancel();
 
-    // Thread.yield();
+    Thread.yield();
   }
 
   private static void DEBUG(String s) {
     if (Config.VERBOSE) System.out.println(s);
   }
 
+  private static HTTPAsyncConnectionTimer connectionTimer;
   private static ServerSocketChannel serverChannel;
   private Selector selector;
 }

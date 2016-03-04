@@ -38,6 +38,7 @@ public class Config {
   public String getDocumentRoot(String serverName) {
     return virtualHosts.get(serverName);
   }
+  public int getIncompleteTimeout() { return incompleteTimeout; }
 
   private boolean parseLine(String line) throws Exception {
     if (line == null) return false;
@@ -86,6 +87,9 @@ public class Config {
       case "LoadMonitor":
         loadMonitor = Class.forName(tokens[1]);
         break;
+      case "IncompleteTimeout":
+        incompleteTimeout = Integer.parseInt(tokens[1]);
+        break;
       default:
         throw new Exception("Invalid config line: " + line);
       }
@@ -100,6 +104,7 @@ public class Config {
   private int numThreads;
   private int cacheSize; // in KB
   private Class loadMonitor;
+  private int incompleteTimeout;
 
   // Variables to aid in processing VirtualHosts.
   private boolean inVirtualHost = false;
