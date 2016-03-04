@@ -23,19 +23,20 @@ public class HTTPAsyncSelectServer extends HTTPServer implements Runnable {
       requestString += getRequestString();
     }
 
-    // Returns whether response is finished sending or not.
-    public boolean respond() throws IOException {
+    // Returns whether response is finished sending or not, or -1 if request
+    // is not done receiving.
+    public int respond() throws IOException {
       try {
         getResponse(requestString);
       } catch (Exception e) {
-        return false;
+        return -1;
       }
       if (Config.VERBOSE) System.out.println("Request:\n" + requestString);
 
       client.write(outBuffer);
-      if (outBuffer.hasRemaining()) return false;
+      if (outBuffer.hasRemaining()) return 0;
 
-      return true;
+      return 1;
     }
 
     private void getResponse(String requestString) throws IOException {
@@ -80,7 +81,9 @@ public class HTTPAsyncSelectServer extends HTTPServer implements Runnable {
     openServerSocketChannel();
 
     for (int i = 0; i < config.getThreads(); i ++) {
-      (new Thread(new HTTPAsyncSelectServer())).start();
+      Thread newThread = new Thread(new HTTPAsyncSelectServer());
+      newThread.setPriority(Thread.MAX_PRIORITY);
+      newThread.start();
     }
   }
 
@@ -152,22 +155,18 @@ public class HTTPAsyncSelectServer extends HTTPServer implements Runnable {
     }
     DEBUG("handleAccept: Accepted connection from " + client);
 
-    // configure the connection to be non-blocking
+    // Configure the connection to be non-blocking.
     client.configureBlocking(false);
 
-    // register the new connection with interests
+    // Register the new connection with interests.
     SelectionKey clientKey = client.register(selector, SelectionKey.OP_READ);
-
-    // attach a buffer to the new connection
-    // you may want to read up on ByteBuffer.allocateDirect on performance
     clientKey.attach(new ClientAttachment(client));
   }
 
   private void handleRead(SelectionKey key) throws IOException {
-    // a connection is ready to be read
-    DEBUG("-->handleRead");
     ClientAttachment clientAttachment = (ClientAttachment)key.attachment();
 
+    // Read.
     try {
       clientAttachment.read();
     } catch (Exception e) {
@@ -176,34 +175,25 @@ public class HTTPAsyncSelectServer extends HTTPServer implements Runnable {
       return;
     }
 
-    // Get key and interest set.
-    SelectionKey sk = key.channel().keyFor(selector);
-    int nextState = sk.interestOps();
-
-    nextState = nextState | SelectionKey.OP_WRITE;
-    DEBUG("   State change: request pending");
-
-    sk.interestOps(nextState);
+    // Respond.
+    handleWrite(key);
 
     DEBUG("\tRead data from " + key.channel());
-    // DEBUG("   Read data from connection " + client + ": read " + readBytes
-    //     + " byte(s); buffer becomes " + output);
-    DEBUG("handleRead-->");
-
   }
 
   private void handleWrite(SelectionKey key) throws IOException {
-    DEBUG("-->handleWrite");
     ClientAttachment clientAttachment = (ClientAttachment)key.attachment();
 
-    if (clientAttachment.respond()) {
-      finish(key);
+    switch (clientAttachment.respond()) {
+    case -1: break; // Request not finished receiving.
+    case 0: // Stop reading, into write-only mode.
+      int nextState = key.interestOps();
+      key.interestOps(nextState & ~SelectionKey.OP_READ);
+      break;
+    case 1: finish(key); break; // All done writing.
     }
 
     DEBUG("\tWrote data to " + key.channel());
-    // DEBUG("   Write data to connection " + client + ": write " + writeBytes
-    //     + " byte(s); buffer becomes " + output);
-    DEBUG("handleWrite-->");
   }
 
   private void finish(SelectionKey key) {
@@ -214,7 +204,7 @@ public class HTTPAsyncSelectServer extends HTTPServer implements Runnable {
     }
     key.cancel();
 
-    Thread.yield();
+    // Thread.yield();
   }
 
   private static void DEBUG(String s) {

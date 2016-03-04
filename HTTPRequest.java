@@ -14,7 +14,9 @@ public class HTTPRequest {
 
   public void setup(BufferedReader request) throws IOException {
     if (Config.VERBOSE) System.out.println("Request header:");
-    while (parseHeader(request.readLine()));
+    while (request.ready()) {
+      parseHeader(request.readLine());
+    }
 
     checkHeaders();
 
@@ -60,8 +62,11 @@ public class HTTPRequest {
       } catch (Exception e) {}
     } else if (line.startsWith("User-Agent: ")) {
       userAgent = getHeaderLineValue(line);
-    } else {
+    } else if (line.length() == 0) {
       lastLine = true;
+    } else {
+      if (Config.VERBOSE)
+        System.out.println("Unrecognized header line: " + line);
     }
 
     return true;
