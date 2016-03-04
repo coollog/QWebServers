@@ -1,0 +1,35 @@
+Apache
+  10 clients
+    Total transaction throughput: 1636.3 files/s
+    Data rate throughput: 517837.9 B/s
+    Average wait time: 0.5035751390331846 ms
+  50 clients
+    Total transaction throughput: 1637.1 files/s
+    Data rate throughput: 517884.2 B/s
+    Average wait time: 3.4310060472787245 ms
+
+AsyncSelect
+  2 threads, 10 clients
+    Total transaction throughput: 1435.1 files/s
+    Data rate throughput: 355482.2 B/s
+    Average wait time: 6.091561563654101 ms
+  4 threads, 10 clients
+    Total transaction throughput: 1636.2 files/s
+    Data rate throughput: 405292.6 B/s
+    Average wait time: 3.4715804913824715 ms
+  5 threads, 10 clients
+    Total transaction throughput: 1633.4 files/s
+    Data rate throughput: 404598.9 B/s
+    Average wait time: 3.876576466266683 ms
+  20 threads, 10 clients
+    Total transaction throughput: 1636.0 files/s
+    Data rate throughput: 405250.6 B/s
+    Average wait time: 3.077200488997555 ms
+  10 threads, 10 clients
+    Total transaction throughput: 1636.1 files/s
+    Data rate throughput: 405268.2 B/s
+    Average wait time: 3.365747814925738 ms
+  10 threads, 50 clients
+    Total transaction throughput: 1637.1 files/s
+    Data rate throughput: 405330.0 B/s
+    Average wait time: 13.601673691283366 ms

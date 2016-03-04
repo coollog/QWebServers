@@ -17,16 +17,21 @@ public class HTTPAsyncSelectServer extends HTTPServer implements Runnable {
     // Returns whether finished reading or not.
     public void read() throws IOException {
       int readBytes = -1;
-      while (readBytes != 0) {
-        readBytes = client.read(inBuffer);
-        if (readBytes == -1) throw new IOException("Connection closed?");
-      }
+      readBytes = client.read(inBuffer);
+      if (readBytes == -1) throw new IOException("Connection closed?");
 
-      getResponse(getRequestString());
+      requestString += getRequestString();
     }
 
     // Returns whether response is finished sending or not.
     public boolean respond() throws IOException {
+      try {
+        getResponse(requestString);
+      } catch (Exception e) {
+        return false;
+      }
+      if (Config.VERBOSE) System.out.println("Request:\n" + requestString);
+
       client.write(outBuffer);
       if (outBuffer.hasRemaining()) return false;
 
@@ -34,12 +39,17 @@ public class HTTPAsyncSelectServer extends HTTPServer implements Runnable {
     }
 
     private void getResponse(String requestString) throws IOException {
+      if (responseReady) return;
+
       HTTPRequest request = new HTTPRequest(requestString);
 
       HTTPResponse response = handler.getResponse(request);
 
-      String responseString = response.getHeader() + response.getContent();
+      String responseString =
+        response.getHeader() + new String(response.getContent(), "ASCII");
       outBuffer = ByteBuffer.wrap(responseString.getBytes("ASCII"));
+
+      responseReady = true;
     }
 
     private String getRequestString() {
@@ -49,10 +59,13 @@ public class HTTPAsyncSelectServer extends HTTPServer implements Runnable {
       while (inBuffer.hasRemaining()) {
         request.append((char)inBuffer.get());
       }
+      inBuffer.flip();
 
       return request.toString();
     }
 
+    private boolean responseReady = false;
+    private String requestString = "";
     private HTTPServerRequestHandler handler;
     private SocketChannel client;
     private ByteBuffer inBuffer = ByteBuffer.allocate(0x1000);
@@ -64,77 +77,14 @@ public class HTTPAsyncSelectServer extends HTTPServer implements Runnable {
 
     DEBUG("Listening for connections on port " + config.getPort());
 
-    HTTPAsyncSelectServer server = new HTTPAsyncSelectServer();
-    server.run();
-  }
+    openServerSocketChannel();
 
-  private void run() {
-    // server socket channel and selector initialization
-    try {
-      // create selector
-      selector = Selector.open();
-
-      // open server socket for accept
-      ServerSocketChannel serverChannel = openServerSocketChannel();
-
-      // register the server channel to selector
-      serverChannel.register(selector, SelectionKey.OP_ACCEPT);
-    } catch (IOException ex) {
-      ex.printStackTrace();
-      System.exit(1);
-    } // end of catch
-
-    // event loop
-    while (true) {
-
-      DEBUG("Enter selection");
-      try {
-        // check to see if any events
-        selector.select();
-      } catch (IOException ex) {
-        ex.printStackTrace();
-        break;
-      } // end of catch
-
-      // readKeys is a set of ready events
-      Set<SelectionKey> readyKeys = selector.selectedKeys();
-
-      // create an iterator for the set
-      Iterator<SelectionKey> iterator = readyKeys.iterator();
-
-      // iterate over all events
-      while (iterator.hasNext()) {
-
-        SelectionKey key = (SelectionKey) iterator.next();
-        iterator.remove();
-
-        try {
-          if (key.isAcceptable()) {
-            // a new connection is ready to be accepted
-            handleAccept(key);
-          } // end of isAcceptable
-
-          if (key.isReadable()) {
-            handleRead(key);
-          } // end of isReadable
-
-          if (key.isWritable()) {
-            handleWrite(key);
-          } // end of if isWritable
-        } catch (IOException ex) {
-          key.cancel();
-          try {
-            key.channel().close();
-          } catch (IOException cex) {
-          }
-        }
-      }
+    for (int i = 0; i < config.getThreads(); i ++) {
+      (new Thread(new HTTPAsyncSelectServer())).start();
     }
   }
 
-  private ServerSocketChannel openServerSocketChannel() {
-    ServerSocketChannel serverChannel = null;
-
+  public static void openServerSocketChannel() {
     try {
       // create server channel
       serverChannel = ServerSocketChannel.open();
@@ -148,18 +98,56 @@ public class HTTPAsyncSelectServer extends HTTPServer implements Runnable {
     } catch (IOException ex) {
       ex.printStackTrace();
       System.exit(1);
-    } // end of catch
+    }
+  }
 
-    return serverChannel;
+  public void run() {
+    // Server socket channel and selector initialization.
+    try {
+      // Create selector.
+      selector = Selector.open();
 
-  } // end of openServerSocketChannel
+      // Register the server channel to selector.
+      serverChannel.register(selector, SelectionKey.OP_ACCEPT);
+    } catch (IOException ex) {
+      ex.printStackTrace();
+      System.exit(1);
+    }
+
+    while (true) {
+      DEBUG("Enter selection");
+      try {
+        selector.select();
+      } catch (IOException ex) {
+        ex.printStackTrace();
+        break;
+      }
+
+      Set<SelectionKey> readyKeys = selector.selectedKeys();
+      Iterator<SelectionKey> iterator = readyKeys.iterator();
+
+      while (iterator.hasNext()) {
+        SelectionKey key = (SelectionKey) iterator.next();
+        iterator.remove();
+
+        try {
+          if (key.isAcceptable()) handleAccept(key);
+          if (key.isReadable()) handleRead(key);
+          if (key.isWritable()) handleWrite(key);
+        } catch (IOException ex) {
+          finish(key);
+        } catch (CancelledKeyException e) {
+          break;
+        }
+      }
+    }
+  }
 
   private void handleAccept(SelectionKey key) throws IOException {
-    ServerSocketChannel server = (ServerSocketChannel) key.channel();
-
-    // extract the ready connection
-    synchronized (server) {
-      SocketChannel client = server.accept();
+    // Extract the ready connection.
+    SocketChannel client;
+    synchronized (serverChannel) {
+      client = serverChannel.accept();
       if (client == null) return;
     }
     DEBUG("handleAccept: Accepted connection from " + client);
@@ -173,19 +161,18 @@ public class HTTPAsyncSelectServer extends HTTPServer implements Runnable {
     // attach a buffer to the new connection
     // you may want to read up on ByteBuffer.allocateDirect on performance
     clientKey.attach(new ClientAttachment(client));
-  } // end of handleAccept
+  }
 
   private void handleRead(SelectionKey key) throws IOException {
     // a connection is ready to be read
     DEBUG("-->handleRead");
-    SocketChannel client = (SocketChannel)key.channel();
     ClientAttachment clientAttachment = (ClientAttachment)key.attachment();
 
     try {
       clientAttachment.read();
     } catch (Exception e) {
       e.printStackTrace();
-      finish(client, key);
+      finish(key);
       return;
     }
 
@@ -193,47 +180,47 @@ public class HTTPAsyncSelectServer extends HTTPServer implements Runnable {
     SelectionKey sk = key.channel().keyFor(selector);
     int nextState = sk.interestOps();
 
-    nextState = nextState & ~SelectionKey.OP_READ | SelectionKey.OP_WRITE;
-    DEBUG("   State change: request done");
+    nextState = nextState | SelectionKey.OP_WRITE;
+    DEBUG("   State change: request pending");
 
     sk.interestOps(nextState);
 
-    DEBUG("\tRead data from " + client);
+    DEBUG("\tRead data from " + key.channel());
     // DEBUG("   Read data from connection " + client + ": read " + readBytes
     //     + " byte(s); buffer becomes " + output);
     DEBUG("handleRead-->");
 
-  } // end of handleRead
+  }
 
   private void handleWrite(SelectionKey key) throws IOException {
     DEBUG("-->handleWrite");
-    SocketChannel client = (SocketChannel)key.channel();
     ClientAttachment clientAttachment = (ClientAttachment)key.attachment();
 
-    boolean finished = clientAttachment.respond();
-
-    if (finished) {
-      finish(client, key);
+    if (clientAttachment.respond()) {
+      finish(key);
     }
 
-    DEBUG("\tWrote data to " + client);
+    DEBUG("\tWrote data to " + key.channel());
     // DEBUG("   Write data to connection " + client + ": write " + writeBytes
     //     + " byte(s); buffer becomes " + output);
     DEBUG("handleWrite-->");
-  } // end of handleWrite
+  }
 
-  private void finish(SocketChannel client, SelectionKey key) {
+  private void finish(SelectionKey key) {
     try {
-      client.close();
+      key.channel().close();
     } catch (IOException e) {
       e.printStackTrace();
     }
     key.cancel();
+
+    Thread.yield();
   }
 
   private static void DEBUG(String s) {
     if (Config.VERBOSE) System.out.println(s);
   }
 
+  private static ServerSocketChannel serverChannel;
   private Selector selector;
-} // end of class
+}

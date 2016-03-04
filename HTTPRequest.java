@@ -4,16 +4,21 @@ import java.util.*;
 
 public class HTTPRequest {
   public HTTPRequest(BufferedReader request) throws IOException {
+    setup(request);
+  }
+
+  public HTTPRequest(String request) throws IOException {
+    this.request = request;
+    setup(new BufferedReader(new StringReader(request)));
+  }
+
+  public void setup(BufferedReader request) throws IOException {
     if (Config.VERBOSE) System.out.println("Request header:");
     while (parseHeader(request.readLine()));
 
     checkHeaders();
 
     parseBody(request);
-  }
-
-  public HTTPRequest(String request) throws IOException {
-    this(new BufferedReader(new StringReader(request)));
   }
 
   public String getMethod() { return method; }
@@ -26,7 +31,7 @@ public class HTTPRequest {
 
   private boolean parseHeader(String line) throws IOException {
     if (Config.VERBOSE) System.out.println(line);
-    if (line == null || line.length() == 0) return false;
+    if (line == null) return false;
 
     if (line.startsWith("GET") || line.startsWith("POST")) {
       String[] tokens = line.split(" ");
@@ -55,6 +60,8 @@ public class HTTPRequest {
       } catch (Exception e) {}
     } else if (line.startsWith("User-Agent: ")) {
       userAgent = getHeaderLineValue(line);
+    } else {
+      lastLine = true;
     }
 
     return true;
@@ -78,7 +85,7 @@ public class HTTPRequest {
   }
 
   private void checkHeaders() throws IOException {
-    if (method == null || urlPath == null || host == null) {
+    if (method == null || urlPath == null || host == null || !lastLine) {
       throw new IOException("Invalid message received.");
     }
   }
@@ -91,4 +98,7 @@ public class HTTPRequest {
   private Date ifModifiedSince;
   private String userAgent;
   private boolean isLoad;
+  private boolean lastLine = false;
+
+  private String request;
 }
