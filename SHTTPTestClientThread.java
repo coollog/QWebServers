@@ -102,7 +102,7 @@ public class SHTTPTestClientThread implements Runnable {
     int numBytes = 0; // Current number of bytes read.
     byte[] buffer = new byte[0x1000];
     while (true) {
-      // System.out.println(numBytes);
+      System.out.println(numBytes);
       try {
         numBytes = inStream.read(buffer);
       } catch (SocketException e) {

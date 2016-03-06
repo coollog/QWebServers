@@ -194,7 +194,7 @@ public class HTTPAsyncSelectServer extends HTTPServer implements Runnable {
     handleWrite(key);
 
     int nextState = key.interestOps();
-    key.interestOps(nextState & SelectionKey.OP_WRITE);
+    key.interestOps(nextState | SelectionKey.OP_WRITE);
 
     DEBUG("\tRead data from " + key.channel());
   }
