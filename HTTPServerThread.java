@@ -95,7 +95,11 @@ public class HTTPServerThread extends Thread {
     } catch (Exception e) {
       e.printStackTrace();
     }
-    conn.close();
+    try {
+      conn.close();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
     config.loadMonitorRemove();
   }
 

@@ -100,8 +100,9 @@ public class SHTTPTestClientThread implements Runnable {
     boolean received = false; // Flag for if we have processed wait time.
     int totalBytes = 0; // All bytes received.
     int numBytes = 0; // Current number of bytes read.
-    byte[] buffer = new byte[0x1000];
+    byte[] buffer = new byte[1];
     while (true) {
+      System.out.println(numBytes);
       try {
         numBytes = inStream.read(buffer);
       } catch (SocketException e) {
