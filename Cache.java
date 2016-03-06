@@ -17,6 +17,7 @@ public class Cache {
   }
 
   public Cache(int cacheSize) {
+    cacheSize *= 0x400; // B to KB
     map = new ConcurrentHashMap<String, DateContentPair>(cacheSize);
     size = cacheSize;
   }
