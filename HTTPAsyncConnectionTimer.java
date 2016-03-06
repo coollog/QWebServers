@@ -4,8 +4,9 @@ import java.nio.channels.*;
 import java.util.*;
 
 public class HTTPAsyncConnectionTimer {
-  public HTTPAsyncConnectionTimer(int timeout) {
-    this.timeout = timeout;
+  public HTTPAsyncConnectionTimer(Config config) {
+    this.timeout = config.getIncompleteTimeout();
+    this.config = config;
   }
 
   public void timeKey(SelectionKey key) {
@@ -27,6 +28,8 @@ public class HTTPAsyncConnectionTimer {
         e.printStackTrace();
       }
       key.cancel();
+
+      config.loadMonitorRemove();
     }
 
     private SelectionKey key;
@@ -34,4 +37,5 @@ public class HTTPAsyncConnectionTimer {
 
   private final int timeout;
   private Timer timer = new Timer();
+  private Config config;
 }

@@ -39,6 +39,10 @@ public class Config {
     return virtualHosts.get(serverName);
   }
   public int getIncompleteTimeout() { return incompleteTimeout; }
+  public void loadMonitorAdd() { loadMonitor.add(); }
+  public void loadMonitorRemove() { loadMonitor.remove(); }
+  public boolean loadMonitorIsOverloaded()
+  { return loadMonitor.isOverloaded(); }
 
   private boolean parseLine(String line) throws Exception {
     if (line == null) return false;
@@ -85,7 +89,7 @@ public class Config {
         VERBOSE = true;
         break;
       case "LoadMonitor":
-        loadMonitor = Class.forName(tokens[1]);
+        loadMonitor = (ILoadMonitor)Class.forName(tokens[1]).newInstance();
         break;
       case "IncompleteTimeout":
         incompleteTimeout = Integer.parseInt(tokens[1]);
@@ -103,7 +107,7 @@ public class Config {
   private HashMap<String, String> virtualHosts = new HashMap<String, String>();
   private int numThreads;
   private int cacheSize; // in KB
-  private Class loadMonitor;
+  private ILoadMonitor loadMonitor;
   private int incompleteTimeout;
 
   // Variables to aid in processing VirtualHosts.

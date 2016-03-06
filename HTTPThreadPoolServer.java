@@ -11,7 +11,7 @@ public class HTTPThreadPoolServer extends HTTPServer {
     if (!init(args)) return;
 
     // Open listen socket.
-    ServerSocket server = new ServerSocket(config.getPort());
+    ServerSocket server = new ServerSocket(config.getPort(), 200);
 
     // Run threads.
     runThreads(server);

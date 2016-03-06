@@ -11,3 +11,4 @@ ThreadPoolSize 10
 CacheSize 131072
 LoadMonitor LoadMonitor
 IncompleteTimeout 3
+VERBOSE

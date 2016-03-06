@@ -42,6 +42,7 @@ public class HTTPRequest {
 
       if (tokens[1].equals("/load")) {
         isLoad = true;
+        urlPath = tokens[1];
         return true;
       }
 

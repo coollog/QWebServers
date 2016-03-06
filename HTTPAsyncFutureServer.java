@@ -20,25 +20,14 @@ public class HTTPAsyncFutureServer extends HTTPServer {
     Thread.currentThread().join();
   }
 
-  public static boolean headerFinished(String str) {
-    try {
-      Scanner s = new Scanner(str);
-      while (true) {
-        if(s.nextLine().length() == 0) {
-            return true;
-        }
-      }
-    } catch (NoSuchElementException exc) {
-      return false;
-    }
-  }
-
   private static void finish(AsynchronousSocketChannel client) {
     try {
       client.close();
     } catch (IOException ex) {
       ex.printStackTrace();
     }
+
+    config.loadMonitorRemove();
   }
 
   public HTTPAsyncFutureServer(AsynchronousChannelGroup group)
@@ -51,7 +40,7 @@ public class HTTPAsyncFutureServer extends HTTPServer {
     // Create server channel.
     InetSocketAddress hostAddress = new InetSocketAddress(config.getPort());
     serverChannel =
-      AsynchronousServerSocketChannel.open(group).bind(hostAddress);
+      AsynchronousServerSocketChannel.open(group).bind(hostAddress, 200);
     System.out.println("Server running...");
   }
 
@@ -73,6 +62,8 @@ public class HTTPAsyncFutureServer extends HTTPServer {
       }
 
       serverChannel.accept(null, this);
+
+      config.loadMonitorAdd();
     }
 
     public void failed(Throwable e, Object attachment) { e.printStackTrace(); }

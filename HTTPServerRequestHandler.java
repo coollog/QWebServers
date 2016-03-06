@@ -66,7 +66,8 @@ public class HTTPServerRequestHandler {
 
     // Handle special /load request.
     if (request.isLoad()) {
-      setStatus(503);
+      if (config.loadMonitorIsOverloaded()) setStatus(503);
+      else setStatus(200);
     } else {
       // Do the request.
       getContent(request);
@@ -169,8 +170,6 @@ public class HTTPServerRequestHandler {
     }
     int contentLength = stdoutString.length();
     content = stdoutString.toString().getBytes();
-
-    lastModified = Utilities.now();
   }
 
   // Helper method for getContent().

@@ -79,6 +79,7 @@ public class HTTPServerThread extends Thread {
   }
 
   private void handleConn(Socket conn) {
+    config.loadMonitorAdd();
     try {
       if (Config.VERBOSE) {
         System.out.println("receive request from " + conn);
@@ -94,6 +95,7 @@ public class HTTPServerThread extends Thread {
     } catch (Exception e) {
       e.printStackTrace();
     }
+    config.loadMonitorRemove();
   }
 
   private enum Type {

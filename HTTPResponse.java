@@ -10,6 +10,7 @@ public class HTTPResponse {
                       String contentType,
                       byte[] content) {
     if (content == null) content = new byte[0];
+    if (lastModified == null) lastModified = Utilities.now();
 
     appendLine("HTTP/1.0 " + statusCode + " " + statusMessage);
     appendLine("Date: " + Utilities.getHTTPDate());

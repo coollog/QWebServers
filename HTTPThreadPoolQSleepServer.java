@@ -12,7 +12,7 @@ public class HTTPThreadPoolQSleepServer extends HTTPServer {
     if (!init(args)) return;
 
     // Open listen socket.
-    ServerSocket server = new ServerSocket(config.getPort());
+    ServerSocket server = new ServerSocket(config.getPort(), 200);
 
     // Create the queue.
     LinkedBlockingQueue<Socket> queue = new LinkedBlockingQueue<Socket>();

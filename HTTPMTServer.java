@@ -10,7 +10,7 @@ public class HTTPMTServer extends HTTPServer {
   public static void main(String[] args) throws Exception {
     if (!init(args)) return;
 
-    ServerSocket server = new ServerSocket(config.getPort());
+    ServerSocket server = new ServerSocket(config.getPort(), 200);
 
     while (true) {
       Socket conn = server.accept();
