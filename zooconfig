@@ -1,0 +1,14 @@
+Listen 1234
+<VirtualHost *:1234>
+  DocumentRoot /home/accts/qc43/doc-root
+  ServerName gator.cs.yale.edu:1234
+<VirtualHost>
+<VirtualHost *:1234>
+  DocumentRoot /home/accts/qc43/doc-root
+  ServerName zoo
+<VirtualHost>
+ThreadPoolSize 10
+CacheSize 131072
+LoadMonitor LoadMonitor
+IncompleteTimeout 3
+VERBOSE
