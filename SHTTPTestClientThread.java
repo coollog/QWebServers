@@ -105,6 +105,7 @@ public class SHTTPTestClientThread implements Runnable {
       try {
         numBytes = inStream.read(buffer);
       } catch (SocketException e) {
+        e.printStackTrace();
         break;
       }
       if (numBytes == -1) break;
