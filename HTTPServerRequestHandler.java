@@ -1,7 +1,7 @@
 import java.io.*;
 import java.net.*;
 import java.nio.channels.*;
-import java.nio.file.Files;
+import java.nio.file.*;
 import java.util.*;
 
 public class HTTPServerRequestHandler {
@@ -94,46 +94,48 @@ public class HTTPServerRequestHandler {
     String root = config.getDocumentRoot(serverName);
     if (root == null) { setStatus(404); return; }
 
-    File file = getFile(root, urlPath, userAgent);
+    Path path = getPath(root, urlPath, userAgent);
     if (Config.VERBOSE)
       System.out.println("READING FILE " + root + "," + urlPath + "," + userAgent);
 
-    if (file == null) { setStatus(404); return; }
+    if (path == null) { setStatus(404); return; }
 
-    if (file.canExecute()) {
-      executeFile(file, urlQuery, serverName, method);
+    if (Files.isExecutable(path)) {
+      executeFile(path, urlQuery, serverName, method);
     } else {
-      readFile(file, ifModifiedSince);
+      readFile(path, ifModifiedSince);
     }
   }
 
   // Helper method for getContent().
-  private File getFile(String root, String url, String userAgent) {
+  private Path getPath(String root, String url, String userAgent) {
     String rootUrl = root + "/" + url;
 
     // If just normal file.
-    File file = new File(rootUrl);
-    if (file.isFile()) return file;
+    Path path = Paths.get(root, url);
+    if (Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS)) {
+      return path;
+    }
 
-    // If is directory, look for index.html/index_m.html.
-    if (url.endsWith("/") || file.isDirectory()) {
+    if (Files.isDirectory(path)) {
+      // If is directory, look for index.html/index_m.html.
       if (userAgent != null && userAgent.contains("iPhone")) {
-        file = new File(rootUrl + "/index_m.html");
-        if (file.isFile()) return file;
+        path = path.resolve("index_m.html");
+      } else {
+        path = path.resolve("index.html");
       }
-      file = new File(rootUrl + "/index.html");
-      if (file.isFile()) return file;
+      if (Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS)) return path;
     }
 
     return null;
   }
 
   // Helper method for getContent().
-  private void executeFile(File file,
+  private void executeFile(Path path,
                            String urlQuery,
                            String serverName,
                            String method) throws IOException {
-    ProcessBuilder pb = new ProcessBuilder(file.getAbsolutePath());
+    ProcessBuilder pb = new ProcessBuilder(path.toAbsolutePath().toString());
 
     // Set up process.
     Map<String, String> env = pb.environment();
@@ -145,14 +147,14 @@ public class HTTPServerRequestHandler {
     env.put("SERVER_PORT", Integer.toString(config.getPort()));
     env.put("SERVER_PROTOCOL", "HTTP/1.0");
     env.put("SERVER_SOFTWARE", "QWebServer/0.1");
-    pb.directory(new File(file.getParent()));
+    pb.directory(path.getParent().toFile());
 
     // Run process.
     Process process = pb.start();
     try {
       process.waitFor();
     } catch (InterruptedException e) {
-      executeFile(file, urlQuery, serverName, method);
+      executeFile(path, urlQuery, serverName, method);
       return;
     }
 
@@ -172,8 +174,9 @@ public class HTTPServerRequestHandler {
   }
 
   // Helper method for getContent().
-  private void readFile(File file, Date ifModifiedSince) throws IOException {
-    lastModified = new Date(file.lastModified());
+  private void readFile(Path path, Date ifModifiedSince) throws IOException {
+    lastModified = new Date(
+      Files.getLastModifiedTime(path, LinkOption.NOFOLLOW_LINKS).toMillis());
 
     // Check if modified since ifModifiedSince.
     if (ifModifiedSince != null && ifModifiedSince.after(lastModified)) {
@@ -181,16 +184,16 @@ public class HTTPServerRequestHandler {
       return;
     }
 
-    String path = file.getCanonicalPath();
+    String pathString = path.toAbsolutePath().toString();
 
     // Content type
-    if (path.endsWith(".jpg") || path.endsWith(".jpeg"))
+    if (pathString.endsWith(".jpg") || pathString.endsWith(".jpeg"))
       contentType = "image/jpeg";
 
     // Check cache.
     if (Config.VERBOSE) System.out.println("CHECKING CACHE");
-    if (cache.hasKey(path)) {
-      Cache.DateContentPair entry = cache.get(path);
+    if (cache.hasKey(pathString)) {
+      Cache.DateContentPair entry = cache.get(pathString);
       if (Config.VERBOSE) System.out.println(entry.toString());
       if (lastModified.before(entry.lastRetrievedDate)) {
         if (Config.VERBOSE) System.out.println("CACHE HIT");
@@ -200,15 +203,10 @@ public class HTTPServerRequestHandler {
     }
 
     // Read in file.
-    int contentLength = (int)file.length();
-    FileInputStream fileStream  = new FileInputStream(file);
-    BufferedInputStream stream = new BufferedInputStream(fileStream);
+    long contentLength = Files.size(path);
+    content = Files.readAllBytes(path);
 
-    content = new byte[contentLength];
-    stream.read(content);
-    fileStream.close();
-
-    cache.put(path, content);
+    cache.put(pathString, content);
   }
 
   private Config config;

@@ -52,6 +52,7 @@ public class HTTPAsyncFutureServer extends HTTPServer {
     InetSocketAddress hostAddress = new InetSocketAddress(config.getPort());
     serverChannel =
       AsynchronousServerSocketChannel.open(group).bind(hostAddress);
+    System.out.println("Server running...");
   }
 
   private void accept() {

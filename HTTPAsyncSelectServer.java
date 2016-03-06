@@ -102,6 +102,8 @@ public class HTTPAsyncSelectServer extends HTTPServer implements Runnable {
 
       // configure it to be non blocking
       serverChannel.configureBlocking(false);
+
+      System.out.println("Server running...");
     } catch (IOException ex) {
       ex.printStackTrace();
       System.exit(1);

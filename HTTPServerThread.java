@@ -31,6 +31,8 @@ public class HTTPServerThread extends Thread {
   }
 
   public void run() {
+    System.out.println("Server running...");
+
     switch (type) {
     case SERVER:
       while (true) {
