@@ -31,10 +31,9 @@ public class HTTPServerThread extends Thread {
   }
 
   public void run() {
-    System.out.println("Server running...");
-
     switch (type) {
     case SERVER:
+      System.out.println("Server running...");
       while (true) {
         synchronized (server) {
           try {
@@ -50,6 +49,7 @@ public class HTTPServerThread extends Thread {
       handleConn(conn);
       break;
     case QUEUE_BUSY:
+      System.out.println("Server running...");
       while (true) {
         conn = null;
         while (conn == null) {
@@ -59,6 +59,7 @@ public class HTTPServerThread extends Thread {
         handleConn(conn);
       }
     case QUEUE_SLEEP:
+      System.out.println("Server running...");
       while (true) {
         conn = null;
 

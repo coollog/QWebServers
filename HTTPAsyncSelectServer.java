@@ -166,7 +166,7 @@ public class HTTPAsyncSelectServer extends HTTPServer implements Runnable {
     client.configureBlocking(false);
 
     // Disable nagle.
-    // client.setOption(StandardSocketOptions.TCP_NODELAY, true);
+    client.setOption(StandardSocketOptions.TCP_NODELAY, true);
 
     // Register the new connection with interests.
     SelectionKey clientKey = client.register(selector, SelectionKey.OP_READ);

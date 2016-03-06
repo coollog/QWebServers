@@ -12,6 +12,8 @@ public class HTTPMTServer extends HTTPServer {
 
     ServerSocket server = new ServerSocket(config.getPort(), 200);
 
+    System.out.println("Server running...");
+
     while (true) {
       Socket conn = server.accept();
 

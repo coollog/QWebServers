@@ -1,0 +1,4 @@
+while read p; do
+  echo $p
+  java SHTTPTestClient -server zoo.cs.yale.edu -servname zoo.cs.yale.edu -port 80 -parallel $p -files fileszooapache -T 60
+done < benchmarking/parallels
