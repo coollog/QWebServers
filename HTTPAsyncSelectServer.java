@@ -212,11 +212,11 @@ public class HTTPAsyncSelectServer extends HTTPServer implements Runnable {
   }
 
   private static void finish(SelectionKey key) {
-    // try {
-    //   key.channel().close();
-    // } catch (IOException e) {
-    //   e.printStackTrace();
-    // }
+    try {
+      key.channel().close();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
     key.cancel();
 
     config.loadMonitorRemove();
