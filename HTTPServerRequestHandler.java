@@ -1,5 +1,7 @@
 import java.io.*;
 import java.net.*;
+import java.nio.channels.*;
+import java.nio.file.Files;
 import java.util.*;
 
 public class HTTPServerRequestHandler {
@@ -7,6 +9,20 @@ public class HTTPServerRequestHandler {
     this.config = config;
     this.conn = conn;
     this.cache = cache;
+
+    hostAddress = conn.getInetAddress().getHostAddress();
+    hostName = conn.getInetAddress().getHostName();
+  }
+
+  public HTTPServerRequestHandler(Config config,
+                                  AsynchronousSocketChannel channel,
+                                  Cache cache) throws Exception {
+    this.config = config;
+    this.cache = cache;
+
+    InetSocketAddress address = (InetSocketAddress)channel.getRemoteAddress();
+    hostAddress = address.getAddress().getHostAddress();
+    hostName = address.getHostName();
   }
 
   public void handle() throws Exception {
@@ -37,8 +53,12 @@ public class HTTPServerRequestHandler {
   public HTTPResponse getResponse(HTTPRequest request) throws IOException {
     handleRequest(request);
 
-    return new HTTPResponse(
-      statusCode, statusMessage, request.getHost(), lastModified, content);
+    return new HTTPResponse(statusCode,
+                            statusMessage,
+                            request.getHost(),
+                            lastModified,
+                            contentType,
+                            content);
   }
 
   private void handleRequest(HTTPRequest request) throws IOException {
@@ -118,8 +138,8 @@ public class HTTPServerRequestHandler {
     // Set up process.
     Map<String, String> env = pb.environment();
     env.put("QUERY_STRING", urlQuery);
-    env.put("REMOTE_ADDR", conn.getInetAddress().getHostAddress());
-    env.put("REMOTE_HOST", conn.getInetAddress().getHostName());
+    env.put("REMOTE_ADDR", hostAddress);
+    env.put("REMOTE_HOST", hostName);
     env.put("REQUEST_METHOD", method);
     env.put("SERVER_NAME", serverName);
     env.put("SERVER_PORT", Integer.toString(config.getPort()));
@@ -161,8 +181,13 @@ public class HTTPServerRequestHandler {
       return;
     }
 
-    // Check cache.
     String path = file.getCanonicalPath();
+
+    // Content type
+    if (path.endsWith(".jpg") || path.endsWith(".jpeg"))
+      contentType = "image/jpeg";
+
+    // Check cache.
     if (Config.VERBOSE) System.out.println("CHECKING CACHE");
     if (cache.hasKey(path)) {
       Cache.DateContentPair entry = cache.get(path);
@@ -181,6 +206,7 @@ public class HTTPServerRequestHandler {
 
     content = new byte[contentLength];
     stream.read(content);
+    fileStream.close();
 
     cache.put(path, content);
   }
@@ -190,7 +216,11 @@ public class HTTPServerRequestHandler {
   private Cache cache;
 
   private byte[] content;
+  private String contentType = "text/html";
   private int statusCode;
   private String statusMessage;
   private Date lastModified;
+
+  private String hostAddress;
+  private String hostName;
 }

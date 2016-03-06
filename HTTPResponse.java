@@ -7,6 +7,7 @@ public class HTTPResponse {
                       String statusMessage,
                       String serverName,
                       Date lastModified,
+                      String contentType,
                       byte[] content) {
     if (content == null) content = new byte[0];
 
@@ -14,7 +15,7 @@ public class HTTPResponse {
     appendLine("Date: " + Utilities.getHTTPDate());
     appendLine("Server: " + serverName);
     if (statusCode == 200) {
-      appendLine("Content-Type: text/html");
+      appendLine("Content-Type: " + contentType);
       appendLine("Content-Length: " + content.length);
       if (lastModified != null) {
         appendLine("Last-Modified: " + Utilities.getHTTPDate(lastModified));

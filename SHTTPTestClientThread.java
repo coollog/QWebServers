@@ -53,7 +53,9 @@ public class SHTTPTestClientThread implements Runnable {
 
       try {
         // Connect to the server.
-        Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
+        Socket socket = new Socket();
+        socket.connect(
+          new InetSocketAddress(SERVER_ADDRESS, SERVER_PORT), 3000);
 
         // Send request.
         String request = "GET " + fileName + " HTTP/1.0\r\n" +

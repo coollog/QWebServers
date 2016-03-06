@@ -82,6 +82,9 @@ public class HTTPServerThread extends Thread {
         System.out.println("receive request from " + conn);
       }
 
+      // Disable nagle.
+      // conn.setTcpNoDelay(true);
+
       HTTPServerRequestHandler handler =
         new HTTPServerRequestHandler(config, conn, cache);
 

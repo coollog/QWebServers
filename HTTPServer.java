@@ -18,6 +18,10 @@ public class HTTPServer {
     runThreadsCommon(null, queue, sleep);
   }
 
+  protected static void DEBUG(String s) {
+    if (Config.VERBOSE) System.out.println(s);
+  }
+
   private static void runThreadsCommon(ServerSocket server,
                                        LinkedBlockingQueue<Socket> queue,
                                        boolean sleep) {

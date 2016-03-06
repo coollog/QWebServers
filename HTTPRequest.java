@@ -15,7 +15,7 @@ public class HTTPRequest {
   public void setup(BufferedReader request) throws IOException {
     if (Config.VERBOSE) System.out.println("Request header:");
     while (request.ready()) {
-      parseHeader(request.readLine());
+      if (!parseHeader(request.readLine())) break;
     }
 
     checkHeaders();

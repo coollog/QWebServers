@@ -19,6 +19,8 @@ public class HTTPAsyncConnectionTimer {
     }
 
     public void run() {
+      if (!key.isValid()) return;
+
       try {
         key.channel().close();
       } catch (IOException e) {
